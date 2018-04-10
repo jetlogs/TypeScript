@@ -832,45 +832,90 @@ namespace FourSlash {
             }
         }
 
-        public verifyCompletionsAt(markerName: string | ReadonlyArray<string>, expected: ReadonlyArray<FourSlashInterface.ExpectedCompletionEntry>, options?: FourSlashInterface.CompletionsAtOptions) {
-            if (typeof markerName !== "string") {
-                for (const m of markerName) this.verifyCompletionsAt(m, expected, options);
-                return;
+        public verifyCompletions(options: FourSlashInterface.VerifyCompletionsOptions) {
+            if (options.at !== undefined) {
+                if (typeof options.at === "string") {
+                    this.goToMarker(options.at);
+                }
+                else {
+                    for (const a of options.at) this.verifyCompletions({ ...options, at: a });
+                    return;
+                }
             }
 
-            this.goToMarker(markerName);
+            this.getCompletionListAtCaret(options);
 
             const actualCompletions = this.getCompletionListAtCaret(options);
             if (!actualCompletions) {
                 this.raiseError(`No completions at position '${this.currentCaretPosition}'.`);
             }
 
-            if (actualCompletions.isNewIdentifierLocation !== (options && options.isNewIdentifierLocation || false)) {
-                this.raiseError(`Expected 'isNewIdentifierLocation' to be ${options && options.isNewIdentifierLocation}, got ${actualCompletions.isNewIdentifierLocation}`);
+            if (actualCompletions.isNewIdentifierLocation !== (options.isNewIdentifierLocation || false)) {
+                this.raiseError(`Expected 'isNewIdentifierLocation' to be ${options.isNewIdentifierLocation || false}, got ${actualCompletions.isNewIdentifierLocation}`);
             }
 
-            const actual = actualCompletions.entries;
+            if (options.are) {
+                this.verifyCompletionsAreExactly(actualCompletions.entries, options.are);
+            }
+            else {
+                assert(options.includes || options.excludes);
+                if (options.includes) {
+                    for (const i of options.includes) {
+                        const found = ts.find(actualCompletions.entries, a => a.name === (typeof i === "string" ? i : i.name));
+                        if (!found) this.raiseError("No found"); //better
+                        this.verifyEntry(found, i);
+                    }
+                }
+                if (options.excludes) {
+                    for (const i of options.excludes) {
+                        assert(!actualCompletions.entries.some(e => e.name === i));
+                    }
+                }
+            }
+        }
 
+        private verifyEntry(actual: ts.CompletionEntry, expected: FourSlashInterface.ExpectedCompletionEntry) {
+            const { insertText, replacementSpan, details } = typeof expected === "string" ? { insertText: undefined, replacementSpan: undefined, details: undefined } : expected;
+
+            if (actual.insertText !== insertText) {
+                this.raiseError(`Expected completion insert text to be ${insertText}, got ${actual.insertText}`);
+            }
+            const convertedReplacementSpan = replacementSpan && ts.createTextSpanFromRange(replacementSpan);
+            try {
+                assert.deepEqual(actual.replacementSpan, convertedReplacementSpan);
+            }
+            catch {
+                this.raiseError(`Expected completion replacementSpan to be ${stringify(convertedReplacementSpan)}, got ${stringify(actual.replacementSpan)}`);
+            }
+
+            if (details) {
+                this.verifyDetails(actual, details);
+            }
+        }
+
+        //!
+        private verifyDetails(actual: ts.CompletionEntry, expected: FourSlashInterface.ExpectedCompletionDetails) {
+            const actualDetails = this.getCompletionEntryDetails(actual.name, actual.source); //dup
+            assert.equal(ts.displayPartsToString(actualDetails.displayParts), expected.text); //not right
+            assert.equal(ts.displayPartsToString(actualDetails.documentation), expected.documentation)
+        }
+
+        private verifyCompletionsAreExactly(actual: ReadonlyArray<ts.CompletionEntry>, expected: ReadonlyArray<FourSlashInterface.ExpectedCompletionEntry>) {
             if (actual.length !== expected.length) {
                 this.raiseError(`Expected ${expected.length} completions, got ${actual.length} (${actual.map(a => a.name)}).`);
             }
 
             ts.zipWith(actual, expected, (completion, expectedCompletion, index) => {
-                const { name, insertText, replacementSpan } = typeof expectedCompletion === "string" ? { name: expectedCompletion, insertText: undefined, replacementSpan: undefined } : expectedCompletion;
+                const name = typeof expectedCompletion === "string" ? expectedCompletion : expectedCompletion.name;
                 if (completion.name !== name) {
                     this.raiseError(`Expected completion at index ${index} to be ${name}, got ${completion.name}`);
                 }
-                if (completion.insertText !== insertText) {
-                    this.raiseError(`Expected completion insert text at index ${index} to be ${insertText}, got ${completion.insertText}`);
-                }
-                const convertedReplacementSpan = replacementSpan && ts.createTextSpanFromRange(replacementSpan);
-                try {
-                    assert.deepEqual(completion.replacementSpan, convertedReplacementSpan);
-                }
-                catch {
-                    this.raiseError(`Expected completion replacementSpan at index ${index} to be ${stringify(convertedReplacementSpan)}, got ${stringify(completion.replacementSpan)}`);
-                }
+                this.verifyEntry(completion, expectedCompletion);
             });
+        }
+
+        public verifyCompletionsAt(markerName: string | ReadonlyArray<string>, expected: ReadonlyArray<FourSlashInterface.ExpectedCompletionEntry>, options?: FourSlashInterface.CompletionsAtOptions) {
+            this.verifyCompletions({ at: markerName, are: expected, ...options });
         }
 
         public verifyCompletionListContains(entryId: ts.Completions.CompletionEntryIdentifier, text?: string, documentation?: string, kind?: string | { kind?: string, kindModifiers?: string }, spanIndex?: number, hasAction?: boolean, options?: FourSlashInterface.VerifyCompletionListContainsOptions) {
@@ -1244,7 +1289,7 @@ Actual: ${stringify(fullActual)}`);
             this.raiseError(`verifyReferencesAtPositionListContains failed - could not find the item: ${stringify(missingItem)} in the returned list: (${stringify(references)})`);
         }
 
-        private getCompletionListAtCaret(options?: FourSlashInterface.CompletionsAtOptions): ts.CompletionInfo {
+        private getCompletionListAtCaret(options?: ts.UserPreferences): ts.CompletionInfo {
             return this.languageService.getCompletionsAtPosition(this.activeFile.fileName, this.currentCaretPosition, options);
         }
 
@@ -3138,6 +3183,7 @@ Actual: ${stringify(fullActual)}`);
             return text.substring(startPos, endPos);
         }
 
+        //eeevil
         private assertItemInCompletionList(
             items: ts.CompletionEntry[],
             entryId: ts.Completions.CompletionEntryIdentifier,
@@ -3162,6 +3208,7 @@ Actual: ${stringify(fullActual)}`);
             const item = matchingItems[0];
 
             if (documentation !== undefined || text !== undefined || entryId.source !== undefined) {
+                //dup code
                 const details = this.getCompletionEntryDetails(item.name, item.source);
 
                 if (documentation !== undefined) {
@@ -4021,6 +4068,10 @@ namespace FourSlashInterface {
             this.state.verifyCompletionsAt(markerName, completions, options);
         }
 
+        public completions(options: VerifyCompletionsOptions) {
+            this.state.verifyCompletions(options);
+        }
+
         public quickInfoIs(expectedText: string, expectedDocumentation?: string) {
             this.state.verifyQuickInfoString(expectedText, expectedDocumentation);
         }
@@ -4651,9 +4702,27 @@ namespace FourSlashInterface {
         newContent: string;
     }
 
-    export type ExpectedCompletionEntry = string | { name: string, insertText?: string, replacementSpan?: FourSlash.Range };
-    export interface CompletionsAtOptions extends Partial<ts.UserPreferences> {
+    //use
+    export type ExpectedCompletionEntry = string | {
+        readonly name: string,
+        readonly insertText?: string,
+        readonly replacementSpan?: FourSlash.Range,
+        readonly details?: ExpectedCompletionDetails,
+    };
+    export interface ExpectedCompletionDetails {
+        readonly text: string;
+        readonly documentation: string;
+    }
+    export interface CompletionsAtOptions extends ts.UserPreferences {
         isNewIdentifierLocation?: boolean;
+    }
+
+    export interface VerifyCompletionsOptions extends ts.UserPreferences {
+        readonly at?: string | ReadonlyArray<string>;
+        readonly isNewIdentifierLocation?: boolean;
+        readonly are?: ReadonlyArray<ExpectedCompletionEntry>;
+        readonly includes?: ReadonlyArray<ExpectedCompletionEntry>;
+        readonly excludes?: ReadonlyArray<string>;
     }
 
     export interface VerifyCompletionListContainsOptions extends ts.UserPreferences {

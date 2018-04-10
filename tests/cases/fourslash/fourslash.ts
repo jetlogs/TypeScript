@@ -200,7 +200,14 @@ declare namespace FourSlashInterface {
     class verify extends verifyNegatable {
         assertHasRanges(ranges: Range[]): void;
         caretAtMarker(markerName?: string): void;
-        completionsAt(markerName: string | ReadonlyArray<string>, completions: ReadonlyArray<string | { name: string, insertText?: string, replacementSpan?: Range }>, options?: CompletionsAtOptions): void;
+        completions(options: {
+            readonly at?: string,
+            readonly isNewIdentifierLocation?: boolean;
+            readonly are?: ReadonlyArray<ExpectedCompletionEntry>;
+            readonly includes?: ReadonlyArray<ExpectedCompletionEntry>;
+            readonly excludes?: ReadonlyArray<string>;
+        }): void;
+        completionsAt(markerName: string | ReadonlyArray<string>, completions: ReadonlyArray<ExpectedCompletionEntry>, options?: CompletionsAtOptions): void;
         applyCodeActionFromCompletion(markerName: string, options: {
             name: string,
             source?: string,
@@ -532,6 +539,15 @@ declare namespace FourSlashInterface {
     interface CompletionsAtOptions extends UserPreferences {
         isNewIdentifierLocation?: boolean;
     }
+    type ExpectedCompletionEntry = string | {
+        readonly name: string,
+        readonly insertText?: string,
+        readonly replacementSpan?: Range,
+        readonly details?: {
+            readonly text: string,
+            readonly documentation: string,
+        }
+    };
 }
 declare function verifyOperationIsCancelled(f: any): void;
 declare var test: FourSlashInterface.test_;
