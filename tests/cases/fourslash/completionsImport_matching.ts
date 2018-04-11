@@ -14,12 +14,42 @@
 // @Filename: /b.ts
 ////bdf/**/
 
-goTo.marker("");
-
-const options = { includeExternalModuleExports: true, sourceDisplay: "./a" };
-verify.not.completionListContains({ name: "abcde", source: "/a" }, undefined, undefined, undefined, undefined, undefined, options);
-verify.not.completionListContains({ name: "dbf", source: "/a" }, undefined, undefined, undefined, undefined, undefined, options);
-
-verify.completionListContains({ name: "bdf", source: "/a" }, "function bdf(): void", "", "function", /*spanIndex*/ undefined, /*hasAction*/ true, options);
-verify.completionListContains({ name: "abcdef", source: "/a" }, "function abcdef(): void", "", "function", /*spanIndex*/ undefined, /*hasAction*/ true, options);
-verify.completionListContains({ name: "BDF", source: "/a" }, "function BDF(): void", "", "function", /*spanIndex*/ undefined, /*hasAction*/ true, options);
+verify.completions({
+    at: "",
+    includes: [
+        {
+            name: "bdf",
+            source: "/a",
+            hasAction: true,
+            details: {
+                text: "function bdf(): void",
+                kind: "function",
+                sourceDisplay: "./a",
+            },
+        },
+        {
+            name: "abcdef",
+            source: "/a",
+            hasAction: true,
+            details: {
+                text: "function abcdef(): void",
+                kind: "function",
+                sourceDisplay: "./a",
+            },
+        },
+        {
+            name: "BDF",
+            source: "/a",
+            hasAction: true,
+            details: {
+                text: "function BDF(): void",
+                kind: "function",
+                sourceDisplay: "./a",
+            },
+        }
+    ],
+    excludes: ["abcde", "dbf"],
+    preferences: {
+        includeCompletionsForModuleExports: true,
+    },
+})

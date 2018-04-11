@@ -843,9 +843,7 @@ namespace FourSlash {
                 }
             }
 
-            this.getCompletionListAtCaret(options);
-
-            const actualCompletions = this.getCompletionListAtCaret(options);
+            const actualCompletions = this.getCompletionListAtCaret(options.preferences);
             if (!actualCompletions) {
                 this.raiseError(`No completions at position '${this.currentCaretPosition}'.`);
             }
@@ -861,21 +859,26 @@ namespace FourSlash {
                 assert(options.includes || options.excludes);
                 if (options.includes) {
                     for (const i of options.includes) {
-                        const found = ts.find(actualCompletions.entries, a => a.name === (typeof i === "string" ? i : i.name));
-                        if (!found) this.raiseError("No found"); //better
+                        const name = typeof i === "string" ? i : i.name;
+                        const found = ts.find(actualCompletions.entries, a => a.name === name);
+                        if (!found) this.raiseError(`No completion ${name} found`); //better
                         this.verifyEntry(found, i);
                     }
                 }
                 if (options.excludes) {
-                    for (const i of options.excludes) {
-                        assert(!actualCompletions.entries.some(e => e.name === i));
+                    for (const exclude of options.excludes) {
+                        if (actualCompletions.entries.some(e => e.name === exclude)) {
+                            this.raiseError(`Did not expect to get a completion named ${exclude}`);
+                        }
                     }
                 }
             }
         }
 
         private verifyEntry(actual: ts.CompletionEntry, expected: FourSlashInterface.ExpectedCompletionEntry) {
-            const { insertText, replacementSpan, details } = typeof expected === "string" ? { insertText: undefined, replacementSpan: undefined, details: undefined } : expected;
+            const { insertText, replacementSpan, details, hasAction, kind } = typeof expected === "string"
+                ? { insertText: undefined, replacementSpan: undefined, details: undefined, hasAction: undefined, kind: undefined }
+                : expected;
 
             if (actual.insertText !== insertText) {
                 this.raiseError(`Expected completion insert text to be ${insertText}, got ${actual.insertText}`);
@@ -888,6 +891,10 @@ namespace FourSlash {
                 this.raiseError(`Expected completion replacementSpan to be ${stringify(convertedReplacementSpan)}, got ${stringify(actual.replacementSpan)}`);
             }
 
+            if (kind !== undefined) assert.equal(actual.kind, kind);
+
+            assert.equal(actual.hasAction, hasAction);
+
             if (details) {
                 this.verifyDetails(actual, details);
             }
@@ -897,7 +904,10 @@ namespace FourSlash {
         private verifyDetails(actual: ts.CompletionEntry, expected: FourSlashInterface.ExpectedCompletionDetails) {
             const actualDetails = this.getCompletionEntryDetails(actual.name, actual.source); //dup
             assert.equal(ts.displayPartsToString(actualDetails.displayParts), expected.text); //not right
-            assert.equal(ts.displayPartsToString(actualDetails.documentation), expected.documentation)
+            assert.equal(ts.displayPartsToString(actualDetails.documentation), expected.documentation || "")
+            assert.equal(actualDetails.kind, actual.kind); // Yes, it's redundant...
+            assert.equal(actualDetails.kindModifiers, actual.kindModifiers); // Yes, it's redundant...
+            assert.equal(actualDetails.source && ts.displayPartsToString(actualDetails.source), expected.sourceDisplay);
         }
 
         private verifyCompletionsAreExactly(actual: ReadonlyArray<ts.CompletionEntry>, expected: ReadonlyArray<FourSlashInterface.ExpectedCompletionEntry>) {
@@ -915,7 +925,7 @@ namespace FourSlash {
         }
 
         public verifyCompletionsAt(markerName: string | ReadonlyArray<string>, expected: ReadonlyArray<FourSlashInterface.ExpectedCompletionEntry>, options?: FourSlashInterface.CompletionsAtOptions) {
-            this.verifyCompletions({ at: markerName, are: expected, ...options });
+            this.verifyCompletions({ at: markerName, are: expected, isNewIdentifierLocation: options && options.isNewIdentifierLocation, preferences: options });
         }
 
         public verifyCompletionListContains(entryId: ts.Completions.CompletionEntryIdentifier, text?: string, documentation?: string, kind?: string | { kind?: string, kindModifiers?: string }, spanIndex?: number, hasAction?: boolean, options?: FourSlashInterface.VerifyCompletionListContainsOptions) {
@@ -4068,8 +4078,10 @@ namespace FourSlashInterface {
             this.state.verifyCompletionsAt(markerName, completions, options);
         }
 
-        public completions(options: VerifyCompletionsOptions) {
-            this.state.verifyCompletions(options);
+        public completions(...options: VerifyCompletionsOptions[]) {
+            for (const o of options) { //name
+                this.state.verifyCompletions(o);
+            }
         }
 
         public quickInfoIs(expectedText: string, expectedDocumentation?: string) {
@@ -4707,22 +4719,26 @@ namespace FourSlashInterface {
         readonly name: string,
         readonly insertText?: string,
         readonly replacementSpan?: FourSlash.Range,
+        readonly hasAction?: boolean, // If not specified, will assert that this is false.
+        readonly kind?: string, // If not specified, won't assert about this
         readonly details?: ExpectedCompletionDetails,
     };
     export interface ExpectedCompletionDetails {
         readonly text: string;
         readonly documentation: string;
+        readonly sourceDisplay?: string;
     }
     export interface CompletionsAtOptions extends ts.UserPreferences {
         isNewIdentifierLocation?: boolean;
     }
 
-    export interface VerifyCompletionsOptions extends ts.UserPreferences {
+    export interface VerifyCompletionsOptions {
         readonly at?: string | ReadonlyArray<string>;
         readonly isNewIdentifierLocation?: boolean;
         readonly are?: ReadonlyArray<ExpectedCompletionEntry>;
         readonly includes?: ReadonlyArray<ExpectedCompletionEntry>;
         readonly excludes?: ReadonlyArray<string>;
+        readonly preferences: ts.UserPreferences;
     }
 
     export interface VerifyCompletionListContainsOptions extends ts.UserPreferences {
