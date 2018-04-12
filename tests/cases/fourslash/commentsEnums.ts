@@ -19,8 +19,8 @@ verify.quickInfos({
 
 verify.completions({
     at: "5",
-    includes: [{ name: "Colors", dtext: "enum Colors", documentation: "Enum of colors" }],
-    isNewIdentifierLocation: true
+    includes: { name: "Colors", text: "enum Colors", documentation: "Enum of colors" },
+    isNewIdentifierLocation: true,
 });
 verify.quickInfoIs("enum Colors", "Enum of colors");
 

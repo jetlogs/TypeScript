@@ -18,7 +18,7 @@
 
 const verifyCompletions = () =>
     verify.completions(
-        { at: "1", includes: ["toFixed"] },
+        { at: "1", includes: "toFixed" },
         { at: "2", are: ["length", "add", "remove"] },
     );
 

@@ -9,6 +9,6 @@
 //// /*2*/
 
 verify.completions(
-    { at: "1", excludes: ["http"] },
+    { at: "1", excludes: "http" },
     { at: "2", excludes: ["http", "https"] },
 );

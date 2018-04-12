@@ -46,7 +46,7 @@ verify.quickInfoAt("1", "var myVariable: number", "This is my variable");
 verify.completions(
     {
         at: "2",
-        includes: [{ name: "myVariable", text: "var myVariable: number", documentation: "This is my variable" }],
+        includes: { name: "myVariable", text: "var myVariable: number", documentation: "This is my variable" },
     },
     {
         at: "3",
@@ -91,8 +91,8 @@ verify.quickInfos({
     "9aq": ["var fooVar: () => void", "fooVar comment"]
 });
 
-verify.completions({ at: "10", includes: [{ name: "i", text: "var i: c", documentation: "instance comment" }] });
-verify.completions({ at: "11", includes: [{ name: "i1_i", text: "var i1_i: i1", documentation: "interface instance comments" }]});
+verify.completions({ at: "10", includes: { name: "i", text: "var i: c", documentation: "instance comment" } });
+verify.completions({ at: "11", includes: { name: "i1_i", text: "var i1_i: i1", documentation: "interface instance comments" } });
 
 verify.quickInfos({
     12: ["var fooVar: () => void", "fooVar comment"],

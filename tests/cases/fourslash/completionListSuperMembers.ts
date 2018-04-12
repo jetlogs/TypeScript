@@ -25,7 +25,7 @@
 
 verify.completions({
     at: "",
-    includes: ["publicInstanceMethod"],
+    includes: "publicInstanceMethod",
     excludes: [
         "publicProperty",
         // No statics
