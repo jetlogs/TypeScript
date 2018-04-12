@@ -550,7 +550,6 @@ declare namespace FourSlashInterface {
         readonly details?: {
             readonly text: string,
             readonly documentation?: string,
-            readonly kind: string,
             readonly sourceDisplay?: string,
         }
     };
