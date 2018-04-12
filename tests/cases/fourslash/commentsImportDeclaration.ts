@@ -29,14 +29,14 @@ verify.quickInfos({
     3: ['import extMod = require("./commentsImportDeclaration_file0")', "Import declaration"]
 });
 
-verify.completions({ at: "6", are: [{ name: "m1", details: { text: "namespace extMod.m1", documentation: "NamespaceComment" } }] });
+verify.completions({ at: "6", are: [{ name: "m1", text: "namespace extMod.m1", documentation: "NamespaceComment" }] });
 
 verify.completions({
     at: "7",
     are: [
-        { name: "fooExport", details: { text: "function extMod.m1.fooExport(): number", documentation: "exported function" } },
-        { name: "b", details: { text: "var extMod.m1.b: number", documentation: "b's comment" } },
-        { name: "m2", details: { text: "namespace extMod.m1.m2", documentation: "m2 comments" } },
+        { name: "fooExport", text: "function extMod.m1.fooExport(): number", documentation: "exported function" },
+        { name: "b", text: "var extMod.m1.b: number", documentation: "b's comment" },
+        { name: "m2", text: "namespace extMod.m1.m2", documentation: "m2 comments" },
     ]
 })
 
@@ -50,7 +50,7 @@ verify.quickInfos({
 verify.completions({
     at: "10",
     are:  [
-        { name: "c", details: { text: "constructor extMod.m1.m2.c(): extMod.m1.m2.c" } },
-        { name: "i", details: { text: "var extMod.m1.m2.i: extMod.m1.m2.c", documentation: "i" } },
+        { name: "c", text: "constructor extMod.m1.m2.c(): extMod.m1.m2.c" },
+        { name: "i", text: "var extMod.m1.m2.i: extMod.m1.m2.c", documentation: "i" },
     ],
 });

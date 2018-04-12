@@ -16,40 +16,8 @@
 
 verify.completions({
     at: "",
-    includes: [
-        {
-            name: "bdf",
-            source: "/a",
-            hasAction: true,
-            details: {
-                text: "function bdf(): void",
-                kind: "function",
-                sourceDisplay: "./a",
-            },
-        },
-        {
-            name: "abcdef",
-            source: "/a",
-            hasAction: true,
-            details: {
-                text: "function abcdef(): void",
-                kind: "function",
-                sourceDisplay: "./a",
-            },
-        },
-        {
-            name: "BDF",
-            source: "/a",
-            hasAction: true,
-            details: {
-                text: "function BDF(): void",
-                kind: "function",
-                sourceDisplay: "./a",
-            },
-        }
-    ],
+    includes: ["bdf", "abcdef", "BDF"].map(name =>
+        ({ name, source: "/a", text: `function ${name}(): void`, hasAction: true, kind: "function", sourceDisplay: "./a" })),
     excludes: ["abcde", "dbf"],
-    preferences: {
-        includeCompletionsForModuleExports: true,
-    },
+    preferences: { includeCompletionsForModuleExports: true },
 })

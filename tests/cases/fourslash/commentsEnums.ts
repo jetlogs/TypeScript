@@ -19,14 +19,14 @@ verify.quickInfos({
 
 verify.completions({
     at: "5",
-    includes: [{ name: "Colors", details: { text: "enum Colors", documentation: "Enum of colors" } }],
+    includes: [{ name: "Colors", dtext: "enum Colors", documentation: "Enum of colors" }],
     isNewIdentifierLocation: true
 });
 verify.quickInfoIs("enum Colors", "Enum of colors");
 
 const completions = [
-    { name: "Cornflower", details: { text: "(enum member) Colors.Cornflower = 0", documentation: "Fancy name for 'blue'" } },
-    { name: "FancyPink", details: { text: "(enum member) Colors.FancyPink = 1", documentation: "Fancy name for 'pink'" } },
+    { name: "Cornflower", text: "(enum member) Colors.Cornflower = 0", documentation: "Fancy name for 'blue'" },
+    { name: "FancyPink", text: "(enum member) Colors.FancyPink = 1", documentation: "Fancy name for 'pink'" },
 ];
 verify.completions({ at: "6", includes: completions });
 verify.quickInfoIs("(enum member) Colors.Cornflower = 0", "Fancy name for 'blue'");

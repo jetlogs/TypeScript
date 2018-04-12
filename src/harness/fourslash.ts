@@ -876,8 +876,8 @@ namespace FourSlash {
         }
 
         private verifyEntry(actual: ts.CompletionEntry, expected: FourSlashInterface.ExpectedCompletionEntry) {
-            const { insertText, replacementSpan, details, hasAction, kind } = typeof expected === "string"
-                ? { insertText: undefined, replacementSpan: undefined, details: undefined, hasAction: undefined, kind: undefined }
+            const { insertText, replacementSpan, hasAction, kind, text, documentation, sourceDisplay } = typeof expected === "string"
+                ? { insertText: undefined, replacementSpan: undefined, hasAction: undefined, kind: undefined, text: undefined, documentation: undefined, sourceDisplay: undefined }
                 : expected;
 
             if (actual.insertText !== insertText) {
@@ -895,19 +895,16 @@ namespace FourSlash {
 
             assert.equal(actual.hasAction, hasAction);
 
-            if (details) {
-                this.verifyDetails(actual, details);
+            if (text) {
+                const actualDetails = this.getCompletionEntryDetails(actual.name, actual.source);
+                assert.equal(ts.displayPartsToString(actualDetails.displayParts), text);
+                assert.equal(ts.displayPartsToString(actualDetails.documentation), documentation || "")
+                assert.equal(actualDetails.kind, actual.kind); // Yes, it's redundant...
+                assert.equal(actualDetails.kindModifiers, actual.kindModifiers); // Yes, it's redundant...
+                assert.equal(actualDetails.source && ts.displayPartsToString(actualDetails.source), sourceDisplay);
+            } else {
+                assert(documentation === undefined && sourceDisplay === undefined, "If specifying completion details, should specify 'text'");
             }
-        }
-
-        //!
-        private verifyDetails(actual: ts.CompletionEntry, expected: FourSlashInterface.ExpectedCompletionDetails) {
-            const actualDetails = this.getCompletionEntryDetails(actual.name, actual.source); //dup
-            assert.equal(ts.displayPartsToString(actualDetails.displayParts), expected.text); //not right
-            assert.equal(ts.displayPartsToString(actualDetails.documentation), expected.documentation || "")
-            assert.equal(actualDetails.kind, actual.kind); // Yes, it's redundant...
-            assert.equal(actualDetails.kindModifiers, actual.kindModifiers); // Yes, it's redundant...
-            assert.equal(actualDetails.source && ts.displayPartsToString(actualDetails.source), expected.sourceDisplay);
         }
 
         private verifyCompletionsAreExactly(actual: ReadonlyArray<ts.CompletionEntry>, expected: ReadonlyArray<FourSlashInterface.ExpectedCompletionEntry>) {
@@ -4721,9 +4718,9 @@ namespace FourSlashInterface {
         readonly replacementSpan?: FourSlash.Range,
         readonly hasAction?: boolean, // If not specified, will assert that this is false.
         readonly kind?: string, // If not specified, won't assert about this
-        readonly details?: ExpectedCompletionDetails,
-    };
-    export interface ExpectedCompletionDetails {
+        //readonly details?: ExpectedCompletionDetails,
+    //};
+    //export interface ExpectedCompletionDetails {
         readonly text: string;
         readonly documentation: string;
         readonly sourceDisplay?: string;

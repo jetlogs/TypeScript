@@ -547,11 +547,11 @@ declare namespace FourSlashInterface {
         readonly replacementSpan?: Range,
         readonly hasAction?: boolean,
         readonly kind?: string,
-        readonly details?: {
-            readonly text: string,
-            readonly documentation?: string,
-            readonly sourceDisplay?: string,
-        }
+
+        // details
+        readonly text: string,
+        readonly documentation?: string,
+        readonly sourceDisplay?: string,
     };
 }
 declare function verifyOperationIsCancelled(f: any): void;
