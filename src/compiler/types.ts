@@ -2724,6 +2724,8 @@ namespace ts {
         /* @internal */ redirectTargetsSet: Map<true>;
         /** Is the file emitted file */
         /* @internal */ isEmittedFile(file: string): boolean;
+
+        /* @internal */ getResolvedModuleWithFailedLookupLocationsFromCache(moduleName: string, containingFile: string): ResolvedModuleWithFailedLookupLocations | undefined;
     }
 
     /* @internal */
