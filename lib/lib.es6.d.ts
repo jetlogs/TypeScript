@@ -21927,6 +21927,26 @@ type VideoFacingModeEnum = "user" | "environment" | "left" | "right";
 type VisibilityState = "hidden" | "visible" | "prerender" | "unloaded";
 type XMLHttpRequestResponseType = "" | "arraybuffer" | "blob" | "document" | "json" | "text";
 
+interface WorkletProcessor {
+    port: MessagePort;
+}
+
+interface AudioWorkletProcessor extends WorkletProcessor {
+}
+
+declare var AudioWorkletProcessor: {
+    prototype: AudioWorkletProcessor;
+    new(): AudioWorkletProcessor;
+};
+
+interface AudioWorkletNode extends AudioNode {
+    port: MessagePort;
+}
+
+declare var AudioWorkletNode: {
+    prototype: AudioWorkletNode;
+    new(context: AudioContext, name?: string): AudioWorkletNode;
+};
 
 /////////////////////////////
 /// WorkerGlobalScope APIs
@@ -21934,6 +21954,7 @@ type XMLHttpRequestResponseType = "" | "arraybuffer" | "blob" | "document" | "js
 // These are only available in a Web Worker
 declare function importScripts(...urls: string[]): void;
 
+declare function registerProcessor(name: string, processor: typeof AudioWorkletProcessor): void;
 
 
 
