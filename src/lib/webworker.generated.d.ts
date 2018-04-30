@@ -1771,3 +1771,15 @@ type ResponseType = "basic" | "cors" | "default" | "error" | "opaque" | "opaquer
 type ServiceWorkerState = "installing" | "installed" | "activating" | "activated" | "redundant";
 type VisibilityState = "hidden" | "visible" | "prerender" | "unloaded";
 type XMLHttpRequestResponseType = "" | "arraybuffer" | "blob" | "document" | "json" | "text";
+
+interface WorkletProcessor {
+    port: MessagePort;
+}
+
+interface AudioWorkletProcessor extends WorkletProcessor {
+}
+
+declare var AudioWorkletProcessor: {
+    prototype: AudioWorkletProcessor;
+    new(): AudioWorkletProcessor;
+};

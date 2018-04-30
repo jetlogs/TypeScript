@@ -16067,3 +16067,12 @@ type VREye = "left" | "right";
 type VideoFacingModeEnum = "user" | "environment" | "left" | "right";
 type VisibilityState = "hidden" | "visible" | "prerender" | "unloaded";
 type XMLHttpRequestResponseType = "" | "arraybuffer" | "blob" | "document" | "json" | "text";
+
+interface AudioWorkletNode extends AudioNode {
+    port: MessagePort;
+}
+
+declare var AudioWorkletNode: {
+    prototype: AudioWorkletNode;
+    new(context: AudioContext, name?: string): AudioWorkletNode;
+};
